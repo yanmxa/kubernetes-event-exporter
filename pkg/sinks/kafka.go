@@ -5,10 +5,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"io/ioutil"
+
 	"github.com/Shopify/sarama"
 	"github.com/resmoio/kubernetes-event-exporter/pkg/kube"
 	"github.com/rs/zerolog/log"
-	"io/ioutil"
 )
 
 // KafkaConfig is the Kafka producer configuration
@@ -106,6 +107,12 @@ func (k *KafkaSink) Send(ctx context.Context, ev *kube.EnhancedEvent) error {
 		Topic: k.cfg.Topic,
 		Key:   sarama.StringEncoder(string(ev.UID)),
 		Value: sarama.ByteEncoder(toSend),
+		Headers: []sarama.RecordHeader{
+			{
+				Key:   []byte("clientId"),
+				Value: []byte(k.cfg.ClientId),
+			},
+		},
 	})
 
 	return err
